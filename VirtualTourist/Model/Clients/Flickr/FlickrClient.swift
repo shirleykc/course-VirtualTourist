@@ -154,7 +154,7 @@ class FlickrClient : NSObject {
         ] as [String : AnyObject]
         
         /* 2. Make the request */
-        let task = taskForGETMethod(parameters: parameters as [String:AnyObject]) { (results, error) in
+        let _ = taskForGETMethod(parameters: parameters as [String:AnyObject]) { (results, error) in
             
             /* 3. Send the desired value(s) to completion handler */
             if let error = error {

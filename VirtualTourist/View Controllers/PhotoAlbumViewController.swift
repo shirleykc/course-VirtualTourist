@@ -70,7 +70,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         
         // Implement flowLayout here.
         let photoFlowLayout = photoCollectionView.collectionViewLayout as? UICollectionViewFlowLayout
-        configure(flowLayout: photoFlowLayout!, withSpace: 2, withColumns: 3, withRows: 4)
+        configure(flowLayout: photoFlowLayout!, withSpace: 1, withColumns: 3, withRows: 5)
         
         setUIActions()
         
@@ -103,7 +103,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         let fetchRequest:NSFetchRequest<Photo> = Photo.fetchRequest()
         let predicate = NSPredicate(format: "pin == %@", argumentArray: [pin!])
         fetchRequest.predicate = predicate
-//        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
+//        let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: true)
 //        fetchRequest.sortDescriptors = [sortDescriptor]
         fetchRequest.sortDescriptors = []
         
@@ -124,6 +124,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
                     self.photos.removeAll()
                 }
                 self.photos = results
+
                 print("photoAlbumController - fetchPhotosController - performFetch photos \(self.photos.count)")
             }
         } catch {
@@ -228,7 +229,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         
         // Display new set of photos for the pin location
         if (self.photos.count > 0) {
-            let delay = DispatchTime.now() + .seconds(2)
+            let delay = DispatchTime.now() + .seconds(1)
             DispatchQueue.main.asyncAfter(deadline: delay) {
                 //                self.photoCollectionView.reloadData()
                 completionHandlerForDisplayPhotos(true)
@@ -243,59 +244,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         //       completionHandlerForDisplayPhotos(true, nil)
     }
     
-//    func displayPhotosFor(completionHandlerForDisplayPhotos: @escaping (_ success: Bool, _ error: String?) -> Void) {
-//
-//        print("displayPhotosFor - photos count: \(photos.count)")
-//
-//        self.isLoadingFlickrPhotos = false
-//        self.fetchedPhotos()
-//
-//        // Display new set of photos for the pin location
-//        if (self.photos.count > 0) {
-//            let delay = DispatchTime.now() + .seconds(1)
-//            DispatchQueue.main.asyncAfter(deadline: delay) {
-////                self.photoCollectionView.reloadData()
-//                completionHandlerForDisplayPhotos(true, nil)
-//            }
-//            print("displayPhotosFor - dispatchQueue self.photos.count: \(self.photos.count)")
-//            //            performUIUpdatesOnMain {
-//            //
-//            //                self.photoCollectionView.reloadData()
-//            //            }
-//        }
-//
-// //       completionHandlerForDisplayPhotos(true, nil)
-//    }
-    
-    // Adds a new `photo` to the the `pin`'s `photoCollection` array
-    
-//    func addPhotosFor(_ pin: Pin, from photoCollection: [FlickrPhoto]) -> [Photo]{
-//
-//        var photos = [Photo]()
-//
-//        // Save photo urls and title for pin
-//        for newPhoto in photoCollection {
-//            if let mediumURL = newPhoto.mediumURL,
-//                let imageURL = URL(string: mediumURL) {
-//                let photo = Photo(context: dataController.viewContext)
-//                photo.creationDate = Date()
-//                photo.title = newPhoto.title
-//                photo.url = mediumURL
-//                if let imageData = try? Data(contentsOf: imageURL) {
-//                    photo.image = imageData
-//                }
-//                photo.pin = pin
-//
-//                photos.append(photo)
-//                print("addPhoto \(photo.title)")
-//            }
-//        }
-//
-//        try? dataController.viewContext.save()
-//
-//        return photos
-//    }
-    
     // MARK: New Collection - get new Flickr collection
 
     func downloadFlickrPhotosFor(_ pin: Pin) {
@@ -305,65 +253,35 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         searchPhotoCollectionFor(pin, FlickrClient.searchPage) { (success, result, error) in
             if success {
                 print("downloadFlickrPhotosFor count: \(pin.photos?.count)")
-                
-                self.savePhotosFor(pin, from: result!) { (success) in
-                    if success {
-                        self.savePhotoImageFor(pin) { (success, error) in
-                            if success {
-                                self.displayPhotos { (completion) in
-                                    self.resetUIAfterDownloadingPhotos()
-                                }
-                            } else {
-                                self.appDelegate.presentAlert(self, "Unable to save photo images")
-                            }
-                        }
-                    } else {
-                        self.displayError("Unable to save photo")
-                    }
-                }
-            } else {
+
                 if let result = result,
                     result.count == 0 {
                     self.appDelegate.presentAlert(self, "No photos available")
                 } else {
-                    self.displayError(error)
+                
+                    self.savePhotosFor(pin, from: result!) { (success) in
+                        if success {
+                            self.savePhotoImageFor(pin) { (success, error) in
+                                if success {
+                                    self.displayPhotos { (completion) in
+                                        self.resetUIAfterDownloadingPhotos()
+                                    }
+                                }
+                                else {
+                                    self.displayError("Unable to save photo images")
+                                }
+                            }
+                        } else {
+                            self.displayError("Unable to save photo")
+                        }
+                    }
                 }
+            } else {
+                self.displayError(error)
             }
-            
+            self.isLoadingFlickrPhotos = false
         }
     }
-    
-//    func downloadFlickrPhotosFor(_ pin: Pin) {
-//        // Initialize
-//        PhotoAlbumViewController.hasFlickrPhoto = true
-//
-//        searchPhotoCollectionFor(pin, FlickrClient.searchPage) { (success, result, error) in
-//            performUIUpdatesOnMain {
-//                if success {
-//                    print("downloadFlickrPhotosFor count: \(pin.photos?.count)")
-//
-//                    self.displayPhotosFor() { (success, error) in
-//                        if success {
-//                            // reset user interface
-//                            self.resetUIAfterDownloadingPhotos()
-////                            self.photoCollectionView.reloadData()
-//                        } else {
-//                            print(error)
-//                            self.appDelegate.presentAlert(self, "Unable to download photos available")
-//                        }
-//                    }
-//                } else {
-//                    if let result = result,
-//                        result.count == 0 {
-//                        self.appDelegate.presentAlert(self, "No photos available")
-//                    } else {
-//                        self.displayError(error)
-//                    }
-//                }
-//
-//            }
-//        }
-//    }
     
     @IBAction func newCollectionPressed(_ sender: AnyObject) {
         print("start newCollectionPressed")
@@ -373,16 +291,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
 
         setUIForDownloadingPhotos()
         deleteAllPhotos()
-//        fetchedPhotos()
-//        photoCollectionView.reloadData()
-        
-//        setupFetchedPhotosController()
-        
-//        if let currentPage = searchPage {
-//            searchPage = currentPage + 1
-//        } else {
-//            searchPage = 1
-//        }
         
         print("newCollectionPressed searchPage: \(FlickrClient.searchPage)")
         
@@ -428,10 +336,7 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
         // Set number of photos to display
-//        if (PhotoAlbumViewController.hasFlickrPhoto) {
-//            photoCount = photos.count
-//            print("collectionView hasFlickrPhoto numberOfItemsInSection: \(photoCount)")
-//        } else
+
         var photoCount: Int
         if (isLoadingFlickrPhotos) {
             photoCount = Int(FlickrClient.ParameterValues.PerPage)!
@@ -442,7 +347,6 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
         }
         
         return photoCount
-//        return photos.count
     }
     
     // MARK: collectionView - Collection View Cell Item
