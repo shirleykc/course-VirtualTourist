@@ -19,6 +19,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
     var span: MKCoordinateSpan!
     var photoCollection: FlickrPhotoCollection!
     
+    var newPhotosButton: UIBarButtonItem?
+    var removePhotosButton: UIBarButtonItem?
+    
     /// The location whose photos are being displayed
     var pin: Pin!
     var photos = [Photo]()
@@ -26,7 +29,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
     var dataController:DataController!
     
     var fetchedPhotosController:NSFetchedResultsController<Photo>!
-    var fetchedPinsController:NSFetchedResultsController<Pin>!
+
+    var isEditingPhotos: Bool = false
+    var selectedPhotoCells = [IndexPath]()
     
     var isLoadingFlickrPhotos: Bool = false
     
@@ -41,7 +46,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
 //    @IBOutlet weak var photoFlowLayout: UICollectionViewFlowLayout!
     //    @IBOutlet weak var addButton: UIBarButtonItem!
     @IBOutlet weak var photoCollectionView: UICollectionView!
-    @IBOutlet weak var newCollectionButton: UIButton!
+//    @IBOutlet weak var newCollectionButton: UIButton!
     
     // MARK: Life Cycle
     
@@ -53,6 +58,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         /* Grab the app delegate */
         appDelegate = UIApplication.shared.delegate as! AppDelegate
         
+        self.navigationController?.setToolbarHidden(false, animated: true)
+        
         photoCollectionView.delegate = self
         
         mapView.delegate = self
@@ -63,21 +70,28 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         mapView.setRegion(MKCoordinateRegionMake(annotation.coordinate, span), animated: true)
         print("mapView addAnnotatiopin")
         
+        /* Initialize action buttons */
+        isEditingPhotos = false
+        
         /* Grab the photos */
         fetchedPhotos(doRemoveAll: true)
         
         isLoadingFlickrPhotos = (photos.count == 0) ? true : false
+        isEditingPhotos = (photos.count == 0) ? false : true
         
         // Implement flowLayout here.
         let photoFlowLayout = photoCollectionView.collectionViewLayout as? UICollectionViewFlowLayout
         configure(flowLayout: photoFlowLayout!, withSpace: 1, withColumns: 3, withRows: 5)
         
+        createNewPhotosButton()
         setUIActions()
         
         // If empty photo collection, then download new set of photos
         if (isLoadingFlickrPhotos) {
             setUIForDownloadingPhotos()
             downloadFlickrPhotosFor(pin)
+        } else {
+            newPhotosButton?.isEnabled = true
         }
     }
     
@@ -283,7 +297,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         }
     }
     
-    @IBAction func newCollectionPressed(_ sender: AnyObject) {
+//    @IBAction func newCollectionPressed(_ sender: AnyObject) {
+    @objc func newCollectionPressed() {
         print("start newCollectionPressed")
 
         // Initialize
@@ -297,7 +312,29 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         downloadFlickrPhotosFor(pin)
     }
     
+    // MARK: createBarButtons - create and set the bar buttons
+    
+    private func createNewPhotosButton() {
+        
+        var toolbarButtons: [UIBarButtonItem] = [UIBarButtonItem]()
+        let flexButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace, target: self, action: nil)
+        newPhotosButton = UIBarButtonItem(title: "New Collection", style: .plain, target: self, action: #selector(newCollectionPressed))
+        toolbarButtons.append(flexButton)
+        toolbarButtons.append(newPhotosButton!)
+        toolbarButtons.append(flexButton)
+        self.setToolbarItems(toolbarButtons, animated: true)
+    }
 
+    private func createRemovePhotosButton() {
+        
+        var toolbarButtons: [UIBarButtonItem] = [UIBarButtonItem]()
+        let flexButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace, target: self, action: nil)
+        removePhotosButton = UIBarButtonItem(title: "Remove Selected Photos", style: .plain, target: self, action: #selector(removePhotosPressed))
+        toolbarButtons.append(flexButton)
+        toolbarButtons.append(removePhotosButton!)
+        toolbarButtons.append(flexButton)
+        self.setToolbarItems(toolbarButtons, animated: true)
+    }
 }
 
 extension PhotoAlbumViewController: MKMapViewDelegate {
@@ -369,12 +406,13 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
         // Display photo
         if (!isLoadingFlickrPhotos) {
             if indexPath.item < photos.count {
-                let aPhoto = fetchedPhotosController.object(at: indexPath)
-                if let imageData = aPhoto.image {
-                    cell.photoImage?.image = UIImage(data: imageData)
-                    cell.activityIndicatorView.stopAnimating()
-    //                PhotoAlbumViewController.hasFlickrPhoto = false
-                    print("image cellForItemAt object \(indexPath) , photo count \(photos.count), title: \(aPhoto.title)")
+                print("cellForItemAt indexPath.item: \(indexPath.item) photos.count: \(photos.count)")
+                if let aPhoto = try? fetchedPhotosController.object(at: indexPath) {
+                    if let imageData = aPhoto.image {
+                        cell.photoImage?.image = UIImage(data: imageData)
+                        cell.activityIndicatorView.stopAnimating()
+                        print("image cellForItemAt object \(indexPath) , photo count \(photos.count), title: \(aPhoto.title)")
+                    }
                 }
             }
         }
@@ -384,85 +422,61 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
     
     // MARK: collectionView - Select an item in Collection View
     
-    //    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath:IndexPath) {
-    //
-    //        // Launch Meme Detail View
-    //        let detailController = storyboard!.instantiateViewController(withIdentifier: "MemeDetailViewController") as! MemeDetailViewController
-    //        detailController.meme = allSentMemes[(indexPath as NSIndexPath).row]
-    //        navigationController!.pushViewController(detailController, animated: true)
-    //
-    //    }
-    
-}
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath:IndexPath) {
 
-extension PhotoAlbumViewController: NSFetchedResultsControllerDelegate {
+        // Add or remove the highlighted cells to the list
+        let cell = collectionView.cellForItem(at: indexPath) as! PhotoCollectionCell
+        
+        setSelectedPhoto(cell, at: indexPath)
+        
+        createRemovePhotosButton()
+        removePhotosButton?.isEnabled = true
+        
+//        newCollectionButton.setTitle("Remove Selected Photos", for: UIControlState.normal)
+//        newCollectionButton.addTarget(self, action: #selector(removePhotos(_:)), for: .touchUpInside)
+    }
     
-//    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-//        print("controllerWillChangeContent")
-//        blockOperations.removeAll(keepingCapacity: false)
-//    }
-//
-//    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-//        photoCollectionView.performBatchUpdates({
-//            self.blockOperations.forEach { $0.start() }
-//        }, completion: { finished in
-//            self.blockOperations.removeAll(keepingCapacity: false)
-//        })
-//        print("controllerDidChangeContent")
-//    }
-    
-//    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-//        switch type {
-//
-//        case .delete:
-//            print("fetch controller delete")
-//            guard let indexPath = indexPath else { return }
-//            photoCollectionView.performBatchUpdates({
-//                self.photos.remove(at: indexPath.item)
-//                self.photoCollectionView.deleteItems(at: [indexPath])
-//            }, completion: nil)
-////            break
-//
-//        case .insert:
-//            print("fetch controller insert")
-//            guard let newIndexPath = newIndexPath else { return }
-//            photoCollectionView.performBatchUpdates({
-//                self.photos.append(anObject as! Photo)
-//                self.photoCollectionView.insertItems(at: [newIndexPath])
-//            }, completion: nil)
-//            break
-//
-//
-//        case .move:
-//            print("fetch controller move")
-//            guard let indexPath = indexPath,  let newIndexPath = newIndexPath else { return }
-//            photoCollectionView.performBatchUpdates({
-//                self.photoCollectionView.moveItem(at: indexPath, to: newIndexPath)
-//            }, completion: nil)
-//            break
-//        case .update:
-//            print("fetch controller update - not supported")
-//            guard let indexPath = indexPath else { return }
-//            photoCollectionView.performBatchUpdates({
-//                self.photoCollectionView.reloadItems(at: [indexPath])
-//            }, completion: nil)
-//            break
-//        }
-//    }
-
-//    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange sectionInfo: NSFetchedResultsSectionInfo, atSectionIndex sectionIndex: Int, for type: NSFetchedResultsChangeType) {
-//        let indexSet = IndexSet(integer: sectionIndex)
-//        switch type {
-//        case .insert:
-//            tableView.insertSections(indexSet, with: .fade)
-//            break
-//        case .delete:
-//            tableView.deleteSections(indexSet, with: .fade)
-//            break
-//        case .update, .move:
-//            fatalError("Invalid change type in controller(_:didChange:atSectionIndex:for:). Only .insert or .delete should be possible.")
-//        }
-//    }
+    @objc private func removePhotosPressed(_ sender: UIButton?) {
+        var selectedPhotos = [Photo]()
+        selectedPhotoCells = selectedPhotoCells.sorted(by: {$0.row > $1.row})
+        
+        // Delete selected photos and perform batch update
+        photoCollectionView.performBatchUpdates({
+            
+            // Delete photos from collectioView and collection
+            for indexPath in self.selectedPhotoCells {
+                self.photoCollectionView.deleteItems(at: [indexPath])
+                self.photos.remove(at: indexPath.item)
+            }
+            
+            // Delete photos from data store
+            for indexPath in self.selectedPhotoCells {
+                let aPhoto = fetchedPhotosController.object(at: indexPath)
+                selectedPhotos.append(aPhoto)
+//                selectedPhotos.append(self.fetchedPhotosController?.object(at: indexPath as IndexPath) as! Photo)
+            }
+            
+            performUIUpdatesOnMain {
+                for aPhoto in selectedPhotos {
+                    print("removePhotos \(aPhoto.title)")
+                    self.dataController.viewContext.delete(aPhoto)
+                }
+                
+                try? self.dataController.viewContext.save()
+            }
+        }) {(completion) in
+            
+            // Fetch remaining photos from the data store
+            self.photos.removeAll()
+            self.fetchedPhotos(doRemoveAll: true)
+            
+            // Reset
+//            self.isEditingPhotos = false
+            self.createNewPhotosButton()
+            self.newPhotosButton?.isEnabled = true
+            self.photoCollectionView.reloadData()
+        }
+    }
 }
 
 // MARK: - PhotoAlbumViewController (Configure UI)
@@ -472,23 +486,24 @@ extension PhotoAlbumViewController {
     // MARK: Enable or disable UI
     
     func setUIEnabled(_ enabled: Bool) {
-        newCollectionButton.isEnabled = enabled
+        newPhotosButton?.isEnabled = enabled
         
         // adjust new collection button alpha
-        if enabled {
-            newCollectionButton.alpha = 1.0
-        } else {
-            newCollectionButton.alpha = 0.5
-        }
+//        if enabled {
+//            newCollectionButton.alpha = 1.0
+//        } else {
+//            newCollectionButton.alpha = 0.5
+//        }
     }
     
     // MARK: Set UI actions
     
     func setUIActions() {
-//        deletePhotos.isEnabled = isEditingPhotos
         if (isLoadingFlickrPhotos) {
+            isEditingPhotos = false
             setUIEnabled(false)
         } else {
+            isEditingPhotos = true
             setUIEnabled(true)
         }
     }
@@ -497,6 +512,7 @@ extension PhotoAlbumViewController {
     
     func setUIForDownloadingPhotos() {
         setUIEnabled(false)
+        newPhotosButton?.isEnabled = false
         photoCollectionView.reloadData()
     }
     
@@ -513,14 +529,12 @@ extension PhotoAlbumViewController {
         
         for aPhoto in self.photos {
             print("deleteAllPhotos \(aPhoto.title)")
-//            pin.removeFromPhotos(aPhoto)
             dataController.viewContext.delete(aPhoto)
         }
         try? dataController.viewContext.save()
         
         // Reset
         self.photos.removeAll()
-//        pin.photos = NSSet()
         
         print("deleteAllPhotos count: \(self.photos.count)")
     }
@@ -531,6 +545,34 @@ extension PhotoAlbumViewController {
         
         print(errorString!)
         dismiss(animated: true, completion: nil)
+    }
+    
+    func setSelectedPhoto(_ cell: PhotoCollectionCell, at indexPath: IndexPath) {
+        
+        // Do not allow to select photos if not in edit photos mode
+        if (!isEditingPhotos) {
+            print("setSelectedPhoto isEditingPhotos: \(isEditingPhotos)")
+            return
+        }
+        
+        // Set photo cell selection
+        if let index = selectedPhotoCells.index(of: indexPath) {
+            selectedPhotoCells.remove(at: index)
+        } else {
+            selectedPhotoCells.append(indexPath)
+        }
+        
+        toggleSelectedPhoto(cell, at: indexPath)
+    }
+    
+    func toggleSelectedPhoto(_ cell: PhotoCollectionCell, at indexPath: IndexPath) {
+        
+        // Toggle photo selection
+        if let _ = selectedPhotoCells.index(of: indexPath) {
+            cell.alpha = 0.375
+        } else {
+            cell.alpha = 1.0
+        }
     }
 }
 
