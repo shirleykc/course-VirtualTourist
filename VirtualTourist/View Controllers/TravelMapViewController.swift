@@ -186,7 +186,6 @@ extension TravelMapViewController: MKMapViewDelegate {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.canShowCallout = false
             pinView!.pinTintColor = .red
-            print("mapView viewFor")
         }
         else {
             pinView!.annotation = annotation
