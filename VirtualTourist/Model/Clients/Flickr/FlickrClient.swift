@@ -14,11 +14,11 @@ class FlickrClient : NSObject {
     
     // MARK: Properties
     
+    // Search page for Flickr photos, default to 1, otherwise a random page number generated from previous search
+    static var searchPage: Int?
+
     // shared session
     var session = URLSession.shared
-    
-    static var searchPage: Int = 1
-
     
     // MARK: Initializers
     
@@ -129,7 +129,7 @@ class FlickrClient : NSObject {
             return
         }
         
-        // pick a random page!
+        // pick a random page for the next search
         let pageLimit = min(totalPages, 100)
         FlickrClient.searchPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
         
@@ -174,12 +174,13 @@ class FlickrClient : NSObject {
         }
     }
     
-    func getPhotoImageFrom(_ mediumURL: String, completionHandlerForPhotoImage: @escaping (_ success: Bool, _ data: Data?, _ error: NSError?) -> Void) {
+    // MARK: Send URL Request to launch photo image URL
+    
+    func taskForURL(mediumURL: String, completionHandlerForURL: @escaping (_ data: Data?, _ error: NSError?) -> Void) -> URLSessionDataTask {
         
         /* 1. Set the parameters */
         
         /* 2/3. Build the URL, Configure the request */
-
         let imageURL = URL(string: mediumURL)
         let request = URLRequest(url: imageURL! as URL)
         
@@ -189,7 +190,7 @@ class FlickrClient : NSObject {
             func sendError(_ error: String) {
                 print(error)
                 let userInfo = [NSLocalizedDescriptionKey : error]
-                completionHandlerForPhotoImage(false, nil, NSError(domain: "getPhotoImageFrom", code: 1, userInfo: userInfo))
+                completionHandlerForURL(nil, NSError(domain: "taskForURL", code: 1, userInfo: userInfo))
             }
             
             /* GUARD: Was there an error? */
@@ -211,11 +212,29 @@ class FlickrClient : NSObject {
             }
             
             /* 5/6. Parse the data and use the data (happens in completion handler) */
-            completionHandlerForPhotoImage(true, data as Data?, nil)
+            completionHandlerForURL(data as Data?, nil)
         }
         
         /* 7. Start the request */
         task.resume()
+        
+        return task
+    }
+    
+    func getPhotoImageFrom(_ mediumURL: String, completionHandlerForPhotoImage: @escaping (_ data: Data?, _ error: NSError?) -> Void) {
+        
+        /* 1. Specify parameters, method (if has {key}), and HTTP body (if POST) */
+        
+        /* 2. Make the request */
+        let _ = taskForURL(mediumURL: mediumURL) { (results, error) in
+            
+            /* 3. Send the desired value(s) to completion handler */
+            if let error = error {
+                completionHandlerForPhotoImage(nil, error)
+            } else {
+                completionHandlerForPhotoImage(results, nil)
+            }
+        }
     }
     
     // MARK: Shared Instance

@@ -16,9 +16,4 @@ class PhotoCollectionCell: UICollectionViewCell {
     
     @IBOutlet weak var photoImage: UIImageView!
     @IBOutlet weak var activityIndicatorView: UIActivityIndicatorView!
-    
-//    override func prepareForReuse() {
-//        super.prepareForReuse()
-//        photoImage = nil
-//    }
 }

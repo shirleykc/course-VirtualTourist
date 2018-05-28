@@ -18,10 +18,7 @@ import CoreData
  * The map is a MKMapView.
  * The pins are represented by MKPointAnnotation instances.
  *
- * The view controller conforms to the MKMapViewDelegate so that it can receive a method
- * invocation when a pin annotation is tapped. It accomplishes this using two delegate
- * methods: one to put a small "info" button on the right side of each pin, and one to
- * respond when the "info" button is tapped.
+ * The view controller conforms to the MKMapViewDelegate.
  */
 
 class TravelMapViewController: UIViewController {
@@ -35,64 +32,63 @@ class TravelMapViewController: UIViewController {
     
     var fetchedPinsController: NSFetchedResultsController<Pin>!
     var fetchedRegionController: NSFetchedResultsController<Region>!
+    var fetchedPhotosController: NSFetchedResultsController<Photo>!
     
     var annotation: Annotation?
     var region: Region?
     
-    // The map. See the setup in the Storyboard file. Note particularly that the view controller
-    // is set up as the map view's delegate.
+    // MARK: Outlets
+    
     @IBOutlet weak var mapView: MKMapView!
     
+    // MARK: Life Cycle
+    
+    // MARK: viewDidLoad
+
     override func viewDidLoad() {
+        
         super.viewDidLoad()
         
-        /* Grab the app delegate */
+        // Grab the app delegate
         appDelegate = UIApplication.shared.delegate as! AppDelegate
         
+        // Add gesture recognizer
         addGestureRecognizer()
-        
-//        /* Grab the region */
-//        setUpFetchRegionController()
-//        loadMapRegion()
-//        
-//        /* Grab the pins */
-//        setUpFetchPinsController()
-//        createAnnotations()
     }
     
-    func addLocationPin(latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> Pin {
-        let pin = Pin(context: dataController.viewContext)
-        pin.latitude = latitude
-        pin.longitude = longitude
-        pin.creationDate = Date()
-        
-        try? dataController.viewContext.save()
-        
-        return pin
-    }
+    // MARK: viewAllAppear
     
     override func viewWillAppear(_ animated: Bool) {
+        
         super.viewWillAppear(animated)
         
         mapView.delegate = self
 
-        /* Grab the region */
+        // Grab the region
         setUpFetchRegionController()
         loadMapRegion()
         
-        /* Grab the pins */
+        // Grab the pins
         setUpFetchPinsController()
         createAnnotations()        
     }
     
+    // MARK: viewDidDisappear
+    
     override func viewDidDisappear(_ animated: Bool) {
+        
         super.viewDidDisappear(animated)
         
         fetchedPinsController = nil
         fetchedRegionController = nil
     }
     
+    // MARK: Actions
+    
+    // MARK: dropPin - drop a location pin on the map
+    
     @objc func dropPin(_ recognizer: UIGestureRecognizer) {
+        
         let point:CGPoint = recognizer.location(in: self.mapView)
         
         let coordinate = mapView.convert(point, toCoordinateFrom: self.mapView)
@@ -103,9 +99,12 @@ class TravelMapViewController: UIViewController {
             print("dropPin createAnnotation: \(coordinate.latitude), \(coordinate.longitude), \(span), \(center)")
             
             annotation = createAnnotationFor(coordinate: coordinate)
+            
         } else if (recognizer.state == .changed) {
+            
             // move pin to a new location
             annotation?.updateCoordinate(newLocationCoordinate: coordinate)
+            
         } else if (recognizer.state == .ended) {
             
             // Save location pin to data store
@@ -114,19 +113,29 @@ class TravelMapViewController: UIViewController {
             annotation?.pin = pin
             
             // Download photos for pin location
-            let result = searchPhotoCollectionFor(pin)
-            if result.count > 0 {
-                pin.photos = NSSet(array: [result])
-            } else {
-                pin.photos = NSSet()
-            }
+            searchPhotoCollectionFor(pin)
         }
     }
+    
+    // MARK: addLocationPin - add a location pin to data store
+    
+    func addLocationPin(latitude: CLLocationDegrees, longitude: CLLocationDegrees) -> Pin {
+        
+        let pin = Pin(context: dataController.viewContext)
+        pin.latitude = latitude
+        pin.longitude = longitude
+        pin.creationDate = Date()
+        
+        try? dataController.viewContext.save()
+        
+        return pin
+    }
+    
+    // MARK: createAnnotations - fetch location pins from data store to create annotaions on map
     
     func createAnnotations() {
         
         // Create an MKPointAnnotation for each pin
-        
         guard let pins = fetchedPinsController.fetchedObjects else {
             appDelegate.presentAlert(self, "No pins available")
             return
@@ -142,7 +151,12 @@ class TravelMapViewController: UIViewController {
         print("createAnnotation: \(pins.count)")
     }
     
+    // MARK: Helpers
+    
+    // MARK: createAnnotation - create an annotation from location pin
+    
     fileprivate func createAnnotation(pin: Pin) {
+        
         // create the annotation and set its coordiate properties
         let annotation = Annotation(pin: pin)
         
@@ -150,7 +164,10 @@ class TravelMapViewController: UIViewController {
         mapView.addAnnotation(annotation)
     }
     
+    // MARK: createAnnotationFor - create an annotation for a location coordinate
+    
     fileprivate func createAnnotationFor(coordinate: CLLocationCoordinate2D) -> Annotation {
+        
         // create the annotation and set its coordiate properties
         let annotation = Annotation(locationCoordinate: coordinate)
         
@@ -160,7 +177,10 @@ class TravelMapViewController: UIViewController {
         return annotation
     }
     
-    fileprivate func setUpFetchPinsController() {
+    // MARK: setUpFetchPinsController - fetch location pins data controller
+    
+    func setUpFetchPinsController() {
+        
         let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
         let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
@@ -173,7 +193,10 @@ class TravelMapViewController: UIViewController {
         }
     }
     
-    fileprivate func setUpFetchRegionController() {
+    // MARK: setUpFetchRegionController - fetch preset map region data controller
+    
+    func setUpFetchRegionController() {
+        
         let fetchRequest: NSFetchRequest<Region> = Region.fetchRequest()
         let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
@@ -187,15 +210,16 @@ class TravelMapViewController: UIViewController {
         }
     }
     
-    // MARK: configure tap and hold recognizer
     
-    fileprivate func addGestureRecognizer() {
+    // MARK: addGestureRecognizer - configure tap and hold recognizer
+    
+    func addGestureRecognizer() {
         let longpressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(dropPin(_:)))
         
         mapView.addGestureRecognizer(longpressRecognizer)
     }
     
-    // MARK: Set span to user selected zoom level
+    // MARK: setSpan - Set span to user selected zoom level
     
     func setSpan() {
         
@@ -205,7 +229,7 @@ class TravelMapViewController: UIViewController {
         setRegion(latitudeDelta, longitudeDelta)
     }
     
-    // MARK: set map region per selected location and zoom level choice
+    // MARK: setRegion - set map region per selected location and zoom level choice
     
     func setRegion(_ latitudeDelta: CLLocationDegrees, _ longitudeDelta: CLLocationDegrees) {
         
@@ -222,12 +246,11 @@ class TravelMapViewController: UIViewController {
         saveRegion(region)
     }
     
-    // MARK: Map Region
+    // MARK: loadMapRegion - Map Region
     
     func loadMapRegion() {
         
         // Create an MKPointAnnotation for each pin
-        
         if let results = fetchedRegionController.fetchedObjects,
             results.count > 0 {
             region = results[0]
@@ -250,7 +273,7 @@ class TravelMapViewController: UIViewController {
         }
     }
     
-    // MARK: save map region per user selected location and zoom level to data store
+    // MARK: saveRegion - save map region per user selected location and zoom level to data store
     
     func saveRegion(_ mapRegion: MKCoordinateRegion) {
         
@@ -258,6 +281,7 @@ class TravelMapViewController: UIViewController {
         if (region == nil) {
             region = Region(context: dataController.viewContext)
         }
+        
         region?.latitude = mapRegion.center.latitude
         region?.longitude = mapRegion.center.longitude
         region?.latitudeDelta = mapRegion.span.latitudeDelta
@@ -267,9 +291,10 @@ class TravelMapViewController: UIViewController {
         try? dataController.viewContext.save()
     }
     
-    // MARK: Center map on latest student location
+    // MARK: centerMapOnPin - enter map on latest student location
     
     private func centerMapOnPin(pin: Pin) {
+        
         let regionRadius: CLLocationDistance = AppDelegate.AppConstants.RegionRadius  // meters
         let centerCoordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(centerCoordinate, regionRadius, regionRadius)
@@ -279,11 +304,13 @@ class TravelMapViewController: UIViewController {
     }
 }
 
+// MARK: MKMapViewDelegate
+
 extension TravelMapViewController: MKMapViewDelegate {
     
     // MARK: mapView - viewFor - Create a view with callout accessory view
+    
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-
 
         let reuseId = "pin"
 
@@ -293,7 +320,6 @@ extension TravelMapViewController: MKMapViewDelegate {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
             pinView!.canShowCallout = false
             pinView!.pinTintColor = .red
-//            pinView!.detailCalloutAccessoryView = UIButton()
             print("mapView viewFor")
         }
         else {
@@ -303,8 +329,8 @@ extension TravelMapViewController: MKMapViewDelegate {
         return pinView
     }
     
-    // MARK: mapView - calloutAccessoryControlTapped - opens the system browser
-    // to the URL specified in the annotationViews subtitle property.
+    // MARK: mapView - didSelect - opens the photo album of the selected location pin
+    
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         let controller = storyboard!.instantiateViewController(withIdentifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
         if let annotation = view.annotation as? Annotation {
@@ -314,11 +340,8 @@ extension TravelMapViewController: MKMapViewDelegate {
             controller.annotation = annotation
             controller.span = mapView.region.span
             controller.dataController = dataController
-//            if controller.searchPage == nil {
-//                controller.searchPage = 1
-//            }
-            PhotoAlbumViewController.hasFlickrPhoto = false
         }
+        
         navigationController!.pushViewController(controller, animated: true)
         print("mapView didSelect: \(view.annotation?.coordinate)")
     }
@@ -332,72 +355,115 @@ extension TravelMapViewController: MKMapViewDelegate {
     }
 }
 
+// MARK: Helpers
+
 extension TravelMapViewController {
     
-    func searchPhotoCollectionFor(_ pin: Pin) -> [Photo] {
+    // MARK: searchPhotoCollectionFor - search photo collection for a pin
+    
+    func searchPhotoCollectionFor(_ pin: Pin) {
         
-        let searchPage = 1
-        print("MapView searchPhotoCollectionFor - searchPage: \(searchPage)")
+        print("MapView searchPhotoCollectionFor - searchPage: \(FlickrClient.searchPage)")
         
-        var photos = [Photo]()
+        // Initialize
+        PhotoAlbumViewController.hasFlickrPhoto = true
         
-        FlickrClient.sharedInstance().getPhotosForCoordinate(pin.latitude, pin.longitude, searchPage) { (result, error) in
+        FlickrClient.sharedInstance().getPhotosForCoordinate(pin.latitude, pin.longitude, FlickrClient.searchPage) { (result, error) in
             
             guard (error == nil) else {
                 self.displayError(error?.userInfo[NSLocalizedDescriptionKey] as? String)
                 return
             }
             
-            if let result = result {
-                if result.count > 0 {
-                    PhotoAlbumViewController.hasFlickrPhoto = true
-                    photos = self.savePhotosFor(pin, from: result)
+            performUIUpdatesOnMain {
+                if let result = result {
+                    if result.count > 0 {
+                        print("map searchPhotoCollectionFor - result - \(result.count)")
+                        self.savePhotosFor(pin, from: result)
+                    }
                 }
             }
         }
-    
-        print("searchPhotoCollectionFor - photos - \(photos.count)")
-    
-        return photos
     }
     
-    func savePhotosFor(_ pin: Pin, from newCollection: [FlickrPhoto]) -> [Photo] {
+    // MARK: savePhotosFor - save photos for a location pin
+    
+    func savePhotosFor(_ pin: Pin, from newCollection: [FlickrPhoto]) {
         
         print("MapView savePhotosFor - newCollection: \(newCollection.count)")
         
-        return addPhotosFor(pin, from: newCollection)
-    }
-    
-    // Adds a new `photo` to the the `pin`'s `photoCollection` array
-    
-    func addPhotosFor(_ pin: Pin, from photoCollection: [FlickrPhoto]) -> [Photo]{
-        
-        var photos = [Photo]()
-        
         // Save photo urls and title for pin
-        for newPhoto in photoCollection {
-            if let mediumURL = newPhoto.mediumURL,
-                let imageURL = URL(string: mediumURL) {
-                let photo = Photo(context: dataController.viewContext)
+        for newPhoto in newCollection {
+            if let mediumURL = newPhoto.mediumURL {
+                let photo = Photo(context: self.dataController.viewContext)
                 photo.creationDate = Date()
                 photo.title = newPhoto.title
                 photo.url = mediumURL
-                if let imageData = try? Data(contentsOf: imageURL) {
-                    photo.image = imageData
-                }
+                photo.image = Data()
                 photo.pin = pin
                 
-                photos.append(photo)
                 print("addPhoto \(photo.title)")
             }
         }
         
-        try? dataController.viewContext.save()
+        try? self.dataController.viewContext.save()
+        
+        savePhotoImageFor(pin)
+    }
+    
+    // MARK: savePhotoImageFor - save photo images for the location pin in data store
+    
+    func savePhotoImageFor(_ pin: Pin) {
+        
+        let photos:[Photo] = setupFetchedPhotosController(pin)
+        if photos.count > 0 {
+            for aPhoto in photos {
+                if let mediumURL = aPhoto.url {
+                    
+                    FlickrClient.sharedInstance().getPhotoImageFrom(mediumURL) { (imageData, error) in
+                        
+                        if error == nil {
+                            performUIUpdatesOnMain {
+                                aPhoto.image = imageData
+                                try? self.dataController.viewContext.save()
+                                print("savePhotoImageFor photo title: \(mediumURL)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: setupFetchedPhotosController - fetch the photos for the location pin in data store
+    
+    func setupFetchedPhotosController(_ pin: Pin) -> [Photo] {
+        
+        var photos = [Photo]()
+        
+        let fetchRequest:NSFetchRequest<Photo> = Photo.fetchRequest()
+        let predicate = NSPredicate(format: "pin == %@", argumentArray: [pin])
+        fetchRequest.predicate = predicate
+        fetchRequest.sortDescriptors = []
+        
+        fetchedPhotosController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
+        
+        do {
+            try fetchedPhotosController.performFetch()
+            if let results = fetchedPhotosController?.fetchedObjects {
+                print("photoAlbumController - fetchPhotosController - performFetch results \(results.count)")
+                photos = results
+                
+                print("photoAlbumController - fetchPhotosController - performFetch photos \(photos.count)")
+            }
+        } catch {
+            displayError("Cannot fetch photos")
+        }
         
         return photos
     }
     
-    // MAKR: Display error
+    // MAKR: displayError - Display error
     
     func displayError(_ errorString: String?) {
         

@@ -16,9 +16,11 @@ class Annotation: NSObject, MKAnnotation {
     // MARK: Properties
 
     var locationCoordinate: CLLocationCoordinate2D
+    
     var coordinate: CLLocationCoordinate2D {
         return locationCoordinate
     }
+    
     var pin: Pin?
     
     // MARK: Initializers
