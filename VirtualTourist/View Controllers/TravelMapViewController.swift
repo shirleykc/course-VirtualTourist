@@ -37,9 +37,17 @@ class TravelMapViewController: UIViewController {
     var annotation: Annotation?
     var region: Region?
     
+    // action buttons
+    var removePinsBanner: UIBarButtonItem?
+    var editButton: UIBarButtonItem?
+    var doneButton: UIBarButtonItem?
+    
+    var doDeletePins: Bool = false
+    
     // MARK: Outlets
     
     @IBOutlet weak var mapView: MKMapView!
+//    @IBOutlet weak var editButton: UIBarButtonItem!
     
     // MARK: Life Cycle
     
@@ -54,6 +62,9 @@ class TravelMapViewController: UIViewController {
         
         // Add gesture recognizer
         addGestureRecognizer()
+        
+        self.navigationController?.setToolbarHidden(true, animated: true)
+        createEditButton(navigationItem)
     }
     
     // MARK: viewAllAppear
@@ -70,7 +81,10 @@ class TravelMapViewController: UIViewController {
         
         // Grab the pins
         setUpFetchPinsController()
-        createAnnotations()        
+        createAnnotations()
+        
+        self.navigationController?.setToolbarHidden(true, animated: true)
+        createEditButton(navigationItem)
     }
     
     // MARK: viewDidDisappear
@@ -115,6 +129,73 @@ class TravelMapViewController: UIViewController {
             // Download photos for pin location
             searchPhotoCollectionFor(pin)
         }
+    }
+    
+    // MARK: done - Done deleting pins
+    
+    @objc func done() {
+        
+        self.navigationController?.setToolbarHidden(true, animated: true)
+        
+        doDeletePins = false
+        
+        createEditButton(navigationItem)
+    }
+    
+    // MARK: editButtonPressed - edit button is pressed
+    
+//    @IBAction func editButtonPressed(_ sender: UIBarButtonItem?) {
+    
+    // MARK: editPin - edit pin button is pressed
+    
+    @objc func editPin() {
+        
+        self.navigationController?.setToolbarHidden(false, animated: true)
+        self.navigationController?.toolbar.barTintColor = UIColor.red
+        self.navigationController?.toolbar.tintColor = UIColor.white
+        
+        createRemovePinsBanner()
+        removePinsBanner?.isEnabled = true
+        
+        doDeletePins = true
+        
+        createDoneButton(navigationItem)
+    }
+    
+    // MARK: createRemovePinsBanner - create and set the remove pins banner
+    
+    private func createRemovePinsBanner() {
+        
+        var toolbarButtons: [UIBarButtonItem] = [UIBarButtonItem]()
+        
+        // use empty flexible space bar button to center the new collection button
+        let flexButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.flexibleSpace, target: self, action: nil)
+        
+        removePinsBanner = UIBarButtonItem(title: "Tap Pins to Delete", style: .plain, target: self, action: nil)
+        toolbarButtons.append(flexButton)
+        toolbarButtons.append(removePinsBanner!)
+        toolbarButtons.append(flexButton)
+        self.setToolbarItems(toolbarButtons, animated: true)
+    }
+    
+    // MARK: createEditButton - create and set the Edit bar buttons
+    
+    private func createEditButton(_ navigationItem: UINavigationItem) {
+        
+        var rightButtons: [UIBarButtonItem] = [UIBarButtonItem]()
+        editButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.edit, target: self, action: #selector(editPin))
+        rightButtons.append(editButton!)
+        navigationItem.setRightBarButtonItems(rightButtons, animated: true)
+    }
+    
+    // MARK: createDoneButton - create and set the Done bar buttons
+    
+    private func createDoneButton(_ navigationItem: UINavigationItem) {
+        
+        var rightButtons: [UIBarButtonItem] = [UIBarButtonItem]()
+        doneButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.done, target: self, action: #selector(done))
+        rightButtons.append(doneButton!)
+        navigationItem.setRightBarButtonItems(rightButtons, animated: true)
     }
     
     // MARK: addLocationPin - add a location pin to data store
@@ -185,7 +266,7 @@ class TravelMapViewController: UIViewController {
         let sortDescriptor = NSSortDescriptor(key: "creationDate", ascending: false)
         fetchRequest.sortDescriptors = [sortDescriptor]
         
-        fetchedPinsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pin")
+        fetchedPinsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: nil)
         do {
             try fetchedPinsController.performFetch()
         } catch {
@@ -332,17 +413,32 @@ extension TravelMapViewController: MKMapViewDelegate {
     // MARK: mapView - didSelect - opens the photo album of the selected location pin
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        let controller = storyboard!.instantiateViewController(withIdentifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
-        if let annotation = view.annotation as? Annotation {
-            print("mapView didSelect annotation: \(annotation.coordinate)")
+        
+        if doDeletePins {
+            if let annotation = view.annotation as? Annotation {
+                print("mapView doDeletePins didSelect annotation: \(annotation.coordinate)")
+                if let pin = annotation.pin {
+                    dataController.viewContext.delete(pin)
+                    try? dataController.viewContext.save()
+                    
+                    mapView.removeAnnotation(annotation)
+                    setUpFetchPinsController()
+                }
+            }
+        } else {
+            let controller = storyboard!.instantiateViewController(withIdentifier: "PhotoAlbumViewController") as! PhotoAlbumViewController
+            if let annotation = view.annotation as? Annotation {
+                print("mapView didSelect annotation: \(annotation.coordinate)")
+                
+                controller.pin = annotation.pin
+                controller.annotation = annotation
+                controller.span = mapView.region.span
+                controller.dataController = dataController
+            }
             
-            controller.pin = annotation.pin
-            controller.annotation = annotation
-            controller.span = mapView.region.span
-            controller.dataController = dataController
+            navigationController!.pushViewController(controller, animated: true)
         }
         
-        navigationController!.pushViewController(controller, animated: true)
         print("mapView didSelect: \(view.annotation?.coordinate)")
     }
     

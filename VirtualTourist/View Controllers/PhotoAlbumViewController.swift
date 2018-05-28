@@ -19,6 +19,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
     var span: MKCoordinateSpan!
     var photoCollection: FlickrPhotoCollection!
     
+    // action buttons
     var newPhotosButton: UIBarButtonItem?
     var removePhotosButton: UIBarButtonItem?
     
@@ -29,7 +30,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
     var dataController:DataController!
     var fetchedPhotosController:NSFetchedResultsController<Photo>!
 
-//    var isEditingPhotos: Bool = false
     var selectedPhotoCells = [IndexPath]()
     var isLoadingFlickrPhotos: Bool = false
     
@@ -52,6 +52,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         appDelegate = UIApplication.shared.delegate as! AppDelegate
         
         self.navigationController?.setToolbarHidden(false, animated: true)
+        self.navigationController?.toolbar.barTintColor = UIColor.white
+        self.navigationController?.toolbar.tintColor = UIColor.blue
         
         photoCollectionView.delegate = self
         
@@ -68,7 +70,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         
         isLoadingFlickrPhotos = (photos.count == 0) ? true : false
         print("viewDidLoad photos.count \(photos.count)")
-//        isEditingPhotos = (photos.count == 0) ? false : true
         
         // Implement flowLayout here.
         let photoFlowLayout = photoCollectionView.collectionViewLayout as? UICollectionViewFlowLayout
@@ -112,6 +113,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         super.viewDidDisappear(animated)
         
         fetchedPhotosController = nil
+        
+        self.navigationController?.setToolbarHidden(true, animated: true)
     }
     
     // MARK: Actions
@@ -150,9 +153,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
             
             // Delete photos from data store
             for indexPath in self.selectedPhotoCells {
-                if let aPhoto = try? fetchedPhotosController.object(at: indexPath) {
-                    selectedPhotos.append(aPhoto)
-                }
+                let aPhoto = fetchedPhotosController.object(at: indexPath)
+                selectedPhotos.append(aPhoto)
             }
             
             performUIUpdatesOnMain {
@@ -464,12 +466,11 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
         if (!isLoadingFlickrPhotos) {
             if indexPath.item < photos.count {
                 print("cellForItemAt indexPath.item: \(indexPath.item) photos.count: \(photos.count)")
-                if let aPhoto = try? fetchedPhotosController.object(at: indexPath) {
-                    if let imageData = aPhoto.image {
-                        cell.photoImage?.image = UIImage(data: imageData)
-                        cell.activityIndicatorView.stopAnimating()
-                        print("image cellForItemAt object \(indexPath) , photo count \(photos.count), title: \(aPhoto.title)")
-                    }
+                let aPhoto = fetchedPhotosController.object(at: indexPath)
+                if let imageData = aPhoto.image {
+                    cell.photoImage?.image = UIImage(data: imageData)
+                    cell.activityIndicatorView.stopAnimating()
+                    print("image cellForItemAt object \(indexPath) , photo count \(photos.count), title: \(aPhoto.title)")
                 }
             }
         }
