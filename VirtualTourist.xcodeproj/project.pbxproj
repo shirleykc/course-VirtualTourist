@@ -16,6 +16,12 @@
 		E44124A3205E472F0089C49A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E44124A2205E472F0089C49A /* Assets.xcassets */; };
 		E44124A6205E472F0089C49A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E44124A4205E472F0089C49A /* LaunchScreen.storyboard */; };
 		E45F9FAC209FBAF60044B738 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45F9FAB209FBAF60044B738 /* Constants.swift */; };
+		E46F24DC20BC2EEB00B06EC9 /* TravelMapViewController+Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46F24DB20BC2EEB00B06EC9 /* TravelMapViewController+Photo.swift */; };
+		E46F24DE20BC338300B06EC9 /* TravelMapViewController+Region.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46F24DD20BC338300B06EC9 /* TravelMapViewController+Region.swift */; };
+		E46F24E020BC35CA00B06EC9 /* TravelMapViewController+Pin.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46F24DF20BC35CA00B06EC9 /* TravelMapViewController+Pin.swift */; };
+		E46F24E220BC39D600B06EC9 /* TravelMapViewController+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46F24E120BC39D600B06EC9 /* TravelMapViewController+Helper.swift */; };
+		E46F24E420BC3CEB00B06EC9 /* PhotoAlbumViewController+Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46F24E320BC3CEB00B06EC9 /* PhotoAlbumViewController+Photo.swift */; };
+		E46F24E620BC442800B06EC9 /* PhotoAlbumViewController+Helper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46F24E520BC442800B06EC9 /* PhotoAlbumViewController+Helper.swift */; };
 		E4842B62209F1CE9000C9D8A /* Annotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4842B61209F1CE9000C9D8A /* Annotation.swift */; };
 		E4AAE3AB20950EFE0065E87E /* Photo+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4AAE3AA20950EFE0065E87E /* Photo+Extensions.swift */; };
 		E4ABEF882068A00D00776654 /* Pin+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4ABEF872068A00D00776654 /* Pin+Extensions.swift */; };
@@ -40,6 +46,12 @@
 		E44124A5205E472F0089C49A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E44124A7205E472F0089C49A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E45F9FAB209FBAF60044B738 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		E46F24DB20BC2EEB00B06EC9 /* TravelMapViewController+Photo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TravelMapViewController+Photo.swift"; sourceTree = "<group>"; };
+		E46F24DD20BC338300B06EC9 /* TravelMapViewController+Region.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TravelMapViewController+Region.swift"; sourceTree = "<group>"; };
+		E46F24DF20BC35CA00B06EC9 /* TravelMapViewController+Pin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TravelMapViewController+Pin.swift"; sourceTree = "<group>"; };
+		E46F24E120BC39D600B06EC9 /* TravelMapViewController+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TravelMapViewController+Helper.swift"; sourceTree = "<group>"; };
+		E46F24E320BC3CEB00B06EC9 /* PhotoAlbumViewController+Photo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PhotoAlbumViewController+Photo.swift"; sourceTree = "<group>"; };
+		E46F24E520BC442800B06EC9 /* PhotoAlbumViewController+Helper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PhotoAlbumViewController+Helper.swift"; sourceTree = "<group>"; };
 		E4842B61209F1CE9000C9D8A /* Annotation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Annotation.swift; sourceTree = "<group>"; };
 		E4AAE3AA20950EFE0065E87E /* Photo+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Photo+Extensions.swift"; sourceTree = "<group>"; };
 		E4ABEF872068A00D00776654 /* Pin+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Pin+Extensions.swift"; sourceTree = "<group>"; };
@@ -110,7 +122,13 @@
 			isa = PBXGroup;
 			children = (
 				E441249A205E472F0089C49A /* PhotoAlbumViewController.swift */,
+				E46F24E520BC442800B06EC9 /* PhotoAlbumViewController+Helper.swift */,
+				E46F24E320BC3CEB00B06EC9 /* PhotoAlbumViewController+Photo.swift */,
 				E4B349BB205E684D00BB915E /* TravelMapViewController.swift */,
+				E46F24E120BC39D600B06EC9 /* TravelMapViewController+Helper.swift */,
+				E46F24DF20BC35CA00B06EC9 /* TravelMapViewController+Pin.swift */,
+				E46F24DD20BC338300B06EC9 /* TravelMapViewController+Region.swift */,
+				E46F24DB20BC2EEB00B06EC9 /* TravelMapViewController+Photo.swift */,
 			);
 			path = "View Controllers";
 			sourceTree = "<group>";
@@ -245,18 +263,24 @@
 				E441249B205E472F0089C49A /* PhotoAlbumViewController.swift in Sources */,
 				E4412499205E472F0089C49A /* AppDelegate.swift in Sources */,
 				E4B349C4205EBD9B00BB915E /* FlickrClient.swift in Sources */,
+				E46F24E420BC3CEB00B06EC9 /* PhotoAlbumViewController+Photo.swift in Sources */,
 				E42285DA208C1C3A00CDAB5C /* FlickrPhoto.swift in Sources */,
 				E42285D8208BE1D800CDAB5C /* PhotoCollectionCell.swift in Sources */,
 				E4C795BD209F9FEF00AE3DA8 /* Region+Extensions.swift in Sources */,
+				E46F24E020BC35CA00B06EC9 /* TravelMapViewController+Pin.swift in Sources */,
 				E44124A1205E472F0089C49A /* VirtualTourist.xcdatamodeld in Sources */,
 				E45F9FAC209FBAF60044B738 /* Constants.swift in Sources */,
 				E4C0197B208CE024006018F3 /* GDCBlackBox.swift in Sources */,
+				E46F24E620BC442800B06EC9 /* PhotoAlbumViewController+Helper.swift in Sources */,
 				E4C0197D208D1284006018F3 /* FlickrPhotoCollection.swift in Sources */,
 				E4B349C8205EE49500BB915E /* DataController.swift in Sources */,
 				E4ABEF882068A00D00776654 /* Pin+Extensions.swift in Sources */,
 				E4B349C2205EBCC200BB915E /* FlickrConstants.swift in Sources */,
+				E46F24DE20BC338300B06EC9 /* TravelMapViewController+Region.swift in Sources */,
 				E4AAE3AB20950EFE0065E87E /* Photo+Extensions.swift in Sources */,
 				E4842B62209F1CE9000C9D8A /* Annotation.swift in Sources */,
+				E46F24E220BC39D600B06EC9 /* TravelMapViewController+Helper.swift in Sources */,
+				E46F24DC20BC2EEB00B06EC9 /* TravelMapViewController+Photo.swift in Sources */,
 				E4B349BC205E684D00BB915E /* TravelMapViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

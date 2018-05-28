@@ -52,51 +52,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Saves changes in the application's managed object context before the application terminates.
         saveViewContext()
     }
-
-//    // MARK: - Core Data stack
-//
-//    lazy var persistentContainer: NSPersistentContainer = {
-//        /*
-//         The persistent container for the application. This implementation
-//         creates and returns a container, having loaded the store for the
-//         application to it. This property is optional since there are legitimate
-//         error conditions that could cause the creation of the store to fail.
-//        */
-//        let container = NSPersistentContainer(name: "VirtualTourist")
-//        container.loadPersistentStores(completionHandler: { (storeDescription, error) in
-//            if let error = error as NSError? {
-//                // Replace this implementation with code to handle the error appropriately.
-//                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-//
-//                /*
-//                 Typical reasons for an error here include:
-//                 * The parent directory does not exist, cannot be created, or disallows writing.
-//                 * The persistent store is not accessible, due to permissions or data protection when the device is locked.
-//                 * The device is out of space.
-//                 * The store could not be migrated to the current model version.
-//                 Check the error message to determine what the actual problem was.
-//                 */
-//                fatalError("Unresolved error \(error), \(error.userInfo)")
-//            }
-//        })
-//        return container
-//    }()
-//
-//    // MARK: - Core Data Saving support
-//
-//    func saveContext () {
-//        let context = persistentContainer.viewContext
-//        if context.hasChanges {
-//            do {
-//                try context.save()
-//            } catch {
-//                // Replace this implementation with code to handle the error appropriately.
-//                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-//                let nserror = error as NSError
-//                fatalError("Unresolved error \(nserror), \(nserror.userInfo)")
-//            }
-//        }
-//    }
     
     func saveViewContext() {
         try? dataController.viewContext.save()
@@ -106,41 +61,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 // MARK: Helper methods
 
 extension AppDelegate {
-    
-    // MARK: Configure background gradient
-    
-//    func configureBackgroundGradient(_ view: UIView) {
-//        let backgroundGradient = CAGradientLayer()
-//        backgroundGradient.colors = [UdacityClient.UI.GreyColor, UdacityClient.UI.GreyColor]
-//        backgroundGradient.locations = [0.0, 1.0]
-//        backgroundGradient.frame = view.frame
-//        view.layer.insertSublayer(backgroundGradient, at: 0)
-//    }
-//    
-//    // MARK: Configure TextField
-//    
-//    func configureTextField(_ textField: UITextField) {
-//        let textFieldPaddingViewFrame = CGRect(x: 0.0, y: 0.0, width: 13.0, height: 0.0)
-//        let textFieldPaddingView = UIView(frame: textFieldPaddingViewFrame)
-//        textField.leftView = textFieldPaddingView
-//        textField.leftViewMode = .always
-//        textField.backgroundColor = UIColor.white
-//        textField.textColor = UIColor.black
-//        textField.attributedPlaceholder = NSAttributedString(string: textField.placeholder!, attributes: [NSAttributedStringKey.foregroundColor: UdacityClient.UI.GreyColor])
-//        textField.tintColor = UdacityClient.UI.BlueColor
-//        textField.borderStyle = .bezel
-//    }
-//    
-//    func validateURLString(_ urlString: String?, completionHandlerForURL: @escaping (_ success: Bool, _ url: URL?, _ errorString: String?) -> Void) {
-//        
-//        if let mediaURL = URL(string: urlString!) {
-//            completionHandlerForURL(true, mediaURL, nil)
-//            return
-//        } else {
-//            completionHandlerForURL(false, nil, "Invalid URL string \(urlString!)")
-//            return
-//        }
-//    }
     
     // MARK: Present application alert
     

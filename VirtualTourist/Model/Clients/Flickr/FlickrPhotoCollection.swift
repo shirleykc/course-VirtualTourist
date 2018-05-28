@@ -42,7 +42,5 @@ class FlickrPhotoCollection {
         }
         
         self.sharedInstance().photos = photos
-        
-        print("FlickrPhotoCollection photos: \(photos)")
     }
 }

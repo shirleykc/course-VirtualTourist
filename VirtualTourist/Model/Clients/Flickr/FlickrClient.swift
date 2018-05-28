@@ -163,7 +163,7 @@ class FlickrClient : NSObject {
                 /* GUARD: Is the "photo" key in photosDictionary? */
                 guard let photosDictionary = results,
                     let photosArray = photosDictionary[FlickrClient.ResponseKeys.Photo] as? [[String: AnyObject]] else {
-                    let userInfo = [NSLocalizedDescriptionKey : "Cannot find key '\(FlickrClient.ResponseKeys.Photo)' in \(results)"]
+                        let userInfo = [NSLocalizedDescriptionKey : "Cannot find key '\(FlickrClient.ResponseKeys.Photo)' in \(String(describing: results))"]
                     completionHandlerForPhotos(nil, NSError(domain: "getPhotosForCoordinate", code: 1, userInfo: userInfo))
                     return
                 }
@@ -220,6 +220,8 @@ class FlickrClient : NSObject {
         
         return task
     }
+    
+    // MARK: getPhotoImageFrom - get photo image data from URL
     
     func getPhotoImageFrom(_ mediumURL: String, completionHandlerForPhotoImage: @escaping (_ data: Data?, _ error: NSError?) -> Void) {
         

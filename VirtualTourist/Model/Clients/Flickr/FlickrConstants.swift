@@ -6,9 +6,9 @@
 //  Copyright © 2018 Udacity. All rights reserved.
 //
 
-// MARK: - UdacityClient (Constants)
-
 import UIKit
+
+// MARK: - FlickrClient (Constants)
 
 extension FlickrClient {
     
